@@ -1,0 +1,13 @@
+[project]
+name = "rambling"
+version = "0.1.0"
+description = "Decision-built solver models and Node-RED flows for System One deciders (Laya)"
+requires-python = ">=3.10"
+dependencies = ["z3-solver>=4.12"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

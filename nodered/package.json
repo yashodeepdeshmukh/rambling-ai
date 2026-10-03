@@ -1,0 +1,8 @@
+{
+  "name": "rambling-nodered-runtime",
+  "private": true,
+  "description": "Headless Node-RED used to validate generated flows",
+  "dependencies": {
+    "node-red": "^5.0.0"
+  }
+}

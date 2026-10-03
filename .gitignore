@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+nodered/node_modules/
+nodered/package-lock.json
