@@ -17,6 +17,7 @@ from typing import Protocol, Union
 class Choice:
     instructions: str
     options: tuple[str, ...]
+    hints: tuple | None = None  # optional short description per option (Laya/Jev "criteria")
     type: str = field(default="choice", init=False)
 
     def __post_init__(self):
@@ -24,6 +25,8 @@ class Choice:
             raise ValueError(f"choice without options: {self.instructions!r}")
         if len(set(self.options)) != len(self.options):
             raise ValueError(f"duplicate options: {self.options}")
+        if self.hints is not None and len(self.hints) != len(self.options):
+            raise ValueError("hints must align with options")
 
 
 @dataclass(frozen=True)
@@ -97,7 +100,19 @@ def to_request(state: str, questions: dict[str, Question]) -> dict:
         body = {"type": q.type, "instructions": q.instructions}
         if isinstance(q, Choice):
             body["options"] = list(q.options)
+            if q.hints:
+                body["hints"] = list(q.hints)
         elif isinstance(q, Score):
             body["levels"] = list(q.levels)
         out[qid] = body
     return {"state": state, "questions": out}
+
+
+def from_request(body: dict) -> Question:
+    """Inverse of to_request() for one question body."""
+    if body["type"] == "choice":
+        return Choice(body["instructions"], tuple(body["options"]),
+                      tuple(body["hints"]) if body.get("hints") else None)
+    if body["type"] == "score":
+        return Score(body["instructions"], tuple(body["levels"]))
+    return Noul(body["instructions"])

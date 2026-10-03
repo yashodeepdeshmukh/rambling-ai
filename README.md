@@ -9,7 +9,23 @@ deterministic extraction (numbers, entities, URLs, MQTT topics, paths…) or fix
 decider never generates text. A fine-tuned Laya plugs into the same `Decider` interface.
 See [PLAN.md](PLAN.md).
 
-## Proof of concept
+**Running on your own machine (needed for the real Laya model): see [LOCAL_RUN.md](LOCAL_RUN.md).**
+
+## Zero-shot PoC: pretrained model, no fine-tuning
+
+`scripts/zero_shot_eval.py --backend laya` runs Convai's **Laya** unchanged through
+`laya_bridge/` (Node, `@receptron/laya`, ONNX Runtime) behind the same cascade. Only per-kind
+temperatures and cascade gates are calibrated; the weights are never updated. Laya's weights come
+from Hugging Face, which the cloud build environment blocks, so the Laya numbers have to be produced
+locally. The bridge is tested here against a dummy model with Laya's exact interface.
+
+The same harness runs **WordLlama** (a frozen embedding model whose weights ship in its PyPI wheel)
+as a floor (`reports/zero_shot_wordllama.md`). It is near-perfect on extraction slots (URLs,
+paths, topics, files) and near random on reasoning decisions (coefficients, number of unknowns,
+message field). The cross-phrasing gates stop it from auto-accepting anything unreliable: every item
+it handled with no LLM call was correct, but that was only 2% of the synthetic flow requests.
+
+## Proof of concept: trained stand-in
 
 Laya weights and an LLM API aren't reachable from the build environment, so the PoC trains a
 **CPU stand-in decider** (hashed logistic scorer over generic features, `rambling/learned.py`) on
@@ -34,14 +50,17 @@ rambling/
   decide.py          typed questions/answers, Laya-shaped request serialization
   deciders.py        OracleDecider, RuleDecider, Recorder (training logs), Shadow (per-decision eval)
   learned.py         trained stand-in decider (per-task logistic scorers, per-kind temperatures)
+  backends.py        pretrained deciders: Laya (via laya_bridge/) and WordLlama, no fine-tuning
+  zero_shot.py       calibration of a frozen decider (temperatures + cross-phrasing gates)
   cascade.py         confidence gates, LLM fallback hook, hard checks, token ledger
   synth.py           synthetic data: 12 solver families + 10 flow templates x 4 phrasings
   extract.py         candidate extraction: the option lists every decision chooses from
   solvers/linear.py  word problem -> decisions -> Z3 model -> unique/bounded solution
   nodered/           10 flow templates, builder, static validator, live headless Node-RED harness
 data/                solver_problems.jsonl, nodered_requests.jsonl, train/ (exported records)
-scripts/             train.py, poc_eval.py, demo.py, evaluate.py (baselines), export_training.py
-reports/             poc.md, training.md, baseline.md
+laya_bridge/         Node JSON-lines bridge to @receptron/laya
+scripts/             zero_shot_eval.py, train.py, poc_eval.py, demo.py, evaluate.py, export_training.py
+reports/             zero_shot_wordllama.md, poc.md, training.md, baseline.md
 ```
 
 ## Quickstart

@@ -13,6 +13,10 @@ METHODS = ("GET", "POST", "PUT", "DELETE")
 OPERATORS = {"greater than": "gt", "less than": "lt", "at least": "gte",
              "at most": "lte", "equal to": "eq", "not equal to": "neq"}
 INTERVAL_DEFAULTS = (1, 5, 10, 30, 60, 300, 3600)
+OPERATOR_HINTS = ("above, over, exceeds, more than, higher than, rises above",
+                  "below, under, drops below, falls under, lower than",
+                  "reaches, is at least, or more", "at most, does not exceed, or less",
+                  "equals, is exactly", "is not, differs from")
 
 
 def _or_missing(items) -> tuple[str, ...]:

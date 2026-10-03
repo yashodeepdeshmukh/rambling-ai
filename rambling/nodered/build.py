@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ..decide import Choice
-from .templates import BY_NAME, BY_SUMMARY, SOURCES, TEMPLATES, FlowBuilder
+from .templates import BY_NAME, BY_SUMMARY, OPERATOR_HINTS, SOURCES, TEMPLATES, FlowBuilder
 
 TASK = "nodered.flow"
 
@@ -14,7 +14,9 @@ def template_question() -> dict:
 
 
 def slot_questions(text: str, template) -> dict:
-    return {s.name: Choice(s.question, SOURCES[s.source](text)) for s in template.slots}
+    return {s.name: Choice(s.question, SOURCES[s.source](text),
+                           OPERATOR_HINTS if s.source == "operator" else None)
+            for s in template.slots}
 
 
 def build(text: str, decider) -> tuple[str, dict, list[dict]]:

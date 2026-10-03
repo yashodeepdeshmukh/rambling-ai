@@ -27,7 +27,7 @@ from sklearn.feature_extraction import FeatureHasher
 from sklearn.linear_model import SGDClassifier
 
 from . import extract
-from .decide import Answer, Choice, Noul, Score, options_of
+from .decide import Answer, Noul, from_request, options_of
 from .deciders import question_kind
 
 N_FEATURES = 2 ** 21
@@ -245,13 +245,7 @@ class LearnedDecider:
         self.thresholds = thresholds or {}  # cascade gates, fitted by cascade.fit_thresholds
 
     # -- training -------------------------------------------------------------
-    @staticmethod
-    def _rebuild_question(body):
-        if body["type"] == "choice":
-            return Choice(body["instructions"], tuple(body["options"]))
-        if body["type"] == "score":
-            return Score(body["instructions"], tuple(body["levels"]))
-        return Noul(body["instructions"])
+    _rebuild_question = staticmethod(from_request)
 
     def iter_labelled(self, records):
         """Yields (task, qid, question, per-option features, gold index) for labelled questions."""

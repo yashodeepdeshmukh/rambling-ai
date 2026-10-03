@@ -2,6 +2,7 @@
 
     python scripts/demo.py "A farm has chickens and cows. There are 30 heads and 74 legs. How many cows?"
     python scripts/demo.py "Expose /check: reply ALERT if the temperature is above 40, else OK." --deploy
+    python scripts/demo.py "..." --backend laya        # pretrained Laya, no fine-tuning
 
 No LLM is attached here: decisions below their gate are marked "→ LLM" (what the cascade would
 send to the fallback) and the trained model's own answer is used provisionally.
@@ -20,6 +21,17 @@ from rambling.deciders import Recorder, question_kind  # noqa: E402
 from rambling.learned import LearnedDecider  # noqa: E402
 from rambling.nodered import build as nr  # noqa: E402
 from rambling.solvers import linear  # noqa: E402
+
+
+class _FixedGate(dict):
+    """One gate for every decision kind (uncalibrated pretrained backend)."""
+
+    def __init__(self, gate):
+        super().__init__()
+        self.gate = gate
+
+    def get(self, key, default=None):
+        return self.gate
 
 
 class Trace:
@@ -42,16 +54,32 @@ def main():
     ap.add_argument("text")
     ap.add_argument("--task", choices=["auto", "solver", "nodered"], default="auto")
     ap.add_argument("--model", default="models/decider.pkl")
+    ap.add_argument("--backend", choices=["learned", "laya", "wordllama"], default="learned",
+                    help="learned = models/decider.pkl; laya/wordllama = pretrained, no fine-tuning "
+                         "(uses models/zero_shot_<backend>.json from zero_shot_eval.py if present)")
+    ap.add_argument("--gate", type=float, default=0.9, help="gate for uncalibrated pretrained backends")
     ap.add_argument("--deploy", action="store_true", help="deploy a Node-RED flow to a local headless Node-RED")
     args = ap.parse_args()
 
-    model = LearnedDecider.load(args.model)
+    if args.backend == "learned":
+        model = LearnedDecider.load(args.model)
+        thresholds = model.thresholds
+    else:
+        from rambling import zero_shot
+        from rambling.backends import LayaDecider, WordLlamaDecider
+        backend = LayaDecider() if args.backend == "laya" else WordLlamaDecider()
+        cal = Path("models") / f"zero_shot_{args.backend}.json"
+        if cal.exists():
+            c = json.loads(cal.read_text())
+            model, thresholds = zero_shot.Tempered(backend, c["temps"]), c["thresholds"]
+        else:
+            model, thresholds = backend, _FixedGate(args.gate)
     task = args.task
     if task == "auto":
         t = args.text
         task = "nodered" if (extract.urls(t) or extract.topics(t) or extract.http_paths(t)
                              or "mqtt" in t.lower() or "endpoint" in t.lower()) else "solver"
-    tr = Trace(model, model.thresholds)
+    tr = Trace(model, thresholds)
 
     if task == "solver":
         m = linear.build(args.text, tr)

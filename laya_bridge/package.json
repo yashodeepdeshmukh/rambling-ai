@@ -1,0 +1,9 @@
+{
+  "name": "rambling-laya-bridge",
+  "private": true,
+  "type": "module",
+  "description": "JSON-lines bridge from Python to @receptron/laya (ONNX Runtime)",
+  "dependencies": {
+    "@receptron/laya": "^0.1.2"
+  }
+}

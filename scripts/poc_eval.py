@@ -16,44 +16,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from rambling import cascade, datasets, training  # noqa: E402
-from rambling.decide import NotRepresentable  # noqa: E402
-from rambling.deciders import OracleDecider  # noqa: E402
+from rambling import datasets, training  # noqa: E402
 from rambling.learned import LearnedDecider  # noqa: E402
-from rambling.nodered import build as nr  # noqa: E402
+from rambling.report import HEADER, nodered_item, solver_item, summarize  # noqa: E402
 from rambling.solvers import linear  # noqa: E402
-
-
-def solver_item(model, ex):
-    gold = linear.gold_answers(ex)
-    alone = linear.check(ex, linear.solve(linear.build(ex["text"], model)))
-    out = cascade.run_solver(ex["text"], model, model.thresholds, OracleDecider(gold))
-    return alone, out, linear.check(ex, out.result)
-
-
-def nodered_item(model, ex, server=None):
-    gold = nr.gold_answers(ex)
-    t, s, _ = nr.build(ex["text"], model)
-    alone = t == ex["template"] and s == ex["slots"]
-    out = cascade.run_nodered(ex["text"], model, model.thresholds, OracleDecider(gold))
-    final = out.result["template"] == ex["template"] and out.result["slots"] == ex["slots"]
-    if server is not None and out.accepted_automatically and ex.get("probes"):
-        deployed, _ = server.deploy(out.artifact)
-        final = final and deployed and all(server.probe(p)[0] for p in ex["probes"])
-    return alone, out, final
-
-
-def summarize(name, rows):
-    n = len(rows)
-    auto = [r for r in rows if r[1].accepted_automatically]
-    led = [r[1].ledger for r in rows]
-    q, fq = sum(l.questions for l in led), sum(l.fallback_questions for l in led)
-    full = sum(r[1].escalated == "full" for r in rows)
-    llm_only, spent = sum(l.llm_only_tokens for l in led), sum(l.fallback_tokens for l in led)
-    return (f"| {name} | {n} | {sum(r[0] for r in rows) / n:.0%} | {len(auto) / n:.0%} | "
-            f"{(f'{sum(r[2] for r in auto) / len(auto):.1%}') if auto else '–'} | "
-            f"{1 - fq / q:.0%} | {full / n:.0%} | {sum(r[2] for r in rows) / n:.0%} | "
-            f"{1 - spent / llm_only:.0%} |")
 
 
 def main():
@@ -70,8 +36,7 @@ def main():
     skipped = len(datasets.solver_problems()) - len(solver_hand)
 
     table = [
-        "| test set | items | learned alone, end-to-end | zero-LLM (auto-accepted) | precision of auto-accepted | decisions answered locally | full escalations | final accuracy (simulated LLM fallback) | est. LLM tokens saved vs all-LLM |",
-        "|---|---|---|---|---|---|---|---|---|",
+        *HEADER,
         summarize("solver, synthetic unseen phrasing", [solver_item(model, ex) for ex in solver_syn]),
         summarize("solver, hand-written", [solver_item(model, ex) for ex in solver_hand]),
         summarize("Node-RED, synthetic unseen phrasing", [nodered_item(model, ex) for ex in nodered_syn]),

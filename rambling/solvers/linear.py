@@ -31,6 +31,19 @@ GOALS = {
 DOMAINS = ("integers", "real numbers")
 SIGNS = ("+", "-", "none")
 RELS = ("=", "<=", ">=")
+# Short descriptions sent with the options (Laya "criteria"); they matter most without fine-tuning.
+HINTS = {
+    "goal": ("how many, what is, find the number or value",
+             "maximum, largest, most, maximize, greatest profit",
+             "minimum, smallest, least, cheapest, minimize cost"),
+    "domain": ("whole countable things: animals, people, items, coins, tickets",
+               "measurements: lengths, hours, money amounts, weights that can be fractional"),
+    "signs": ("the quantity is added or counted in this constraint",
+              "the quantity is subtracted: difference, fewer, less than, times as many as",
+              "the quantity does not appear in this constraint"),
+    "rels": ("is, equals, total, exactly, in all", "at most, no more than, up to, available, limit",
+             "at least, no less than, needs, requires, minimum"),
+}
 
 
 @dataclass
@@ -109,9 +122,9 @@ def header_questions() -> dict:
     return {
         "n_vars": Choice("How many unknown quantities must be found or chosen?",
                          tuple(str(i) for i in range(1, MAX_VARS + 1))),
-        "domain": Choice("The unknowns are which kind of number?", DOMAINS),
+        "domain": Choice("The unknowns are which kind of number?", DOMAINS, HINTS["domain"]),
         "nonneg": Noul("Every unknown quantity is zero or positive."),
-        "goal": Choice("What does the question ask for?", tuple(GOALS.values())),
+        "goal": Choice("What does the question ask for?", tuple(GOALS.values()), HINTS["goal"]),
         "n_cons": Choice("How many equations or inequalities does the text state, "
                          "not counting nonnegativity?", tuple(str(i) for i in range(1, MAX_CONS + 1))),
     }
@@ -126,7 +139,7 @@ def var_questions(text: str, n: int) -> dict:
 def term_questions(prefix: str, label: str, model: LinearModel, mags) -> dict:
     qs = {}
     for i, v in enumerate(model.vars):
-        qs[f"{prefix}.v{i+1}.sign"] = Choice(f"{label}: sign of the x{i+1} ({v}) term", SIGNS)
+        qs[f"{prefix}.v{i+1}.sign"] = Choice(f"{label}: sign of the x{i+1} ({v}) term", SIGNS, HINTS["signs"])
         qs[f"{prefix}.v{i+1}.mag"] = Choice(f"{label}: size of the x{i+1} ({v}) coefficient", mags)
     return qs
 
@@ -136,7 +149,7 @@ def anchor_questions(text: str, j: int) -> dict:
     label = f"Constraint #{j}"
     return {
         f"c{j}.const": Choice(f"{label}: constant added to the left side", const_options(text)),
-        f"c{j}.rel": Choice(f"{label}: relation between the left and right side", RELS),
+        f"c{j}.rel": Choice(f"{label}: relation between the left and right side", RELS, HINTS["rels"]),
         f"c{j}.rhs": Choice(f"{label}: right-hand side value", rhs_options(text)),
     }
 
