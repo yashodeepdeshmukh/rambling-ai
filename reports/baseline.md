@@ -8,21 +8,21 @@
 
 | example | ok | status | questions | decider calls |
 |---|---|---|---|---|
-| chickens_cows | ✅ | ok | 22 | 5 |
-| tickets | ✅ | ok | 22 | 5 |
-| ages | ✅ | ok | 22 | 5 |
-| coins | ✅ | ok | 22 | 5 |
-| sum_diff | ✅ | ok | 22 | 5 |
-| rectangle | ✅ | ok | 22 | 5 |
-| pens | ✅ | ok | 22 | 5 |
-| marbles | ✅ | ok | 36 | 6 |
-| bakery | ✅ | ok | 25 | 5 |
-| feed_mix | ✅ | ok | 25 | 5 |
-| plumber | ✅ | ok | 12 | 4 |
-| apples | ✅ | ok | 22 | 5 |
-| savings | ✅ | ok | 12 | 4 |
-| van | ✅ | ok | 13 | 4 |
-| discount | ❌ | not representable | 6 | 2 |
+| chickens_cows | ✅ | ok | 22 | 7 |
+| tickets | ✅ | ok | 22 | 7 |
+| ages | ✅ | ok | 22 | 7 |
+| coins | ✅ | ok | 22 | 7 |
+| sum_diff | ✅ | ok | 22 | 7 |
+| rectangle | ✅ | ok | 22 | 7 |
+| pens | ✅ | ok | 22 | 7 |
+| marbles | ✅ | ok | 36 | 9 |
+| bakery | ✅ | ok | 25 | 7 |
+| feed_mix | ✅ | ok | 25 | 7 |
+| plumber | ✅ | ok | 12 | 5 |
+| apples | ✅ | ok | 22 | 7 |
+| savings | ✅ | ok | 12 | 5 |
+| van | ✅ | ok | 13 | 5 |
+| discount | ❌ | not representable | 9 | 3 |
 
 ### Node-RED (live deploy + probes): 20/20 end-to-end
 
@@ -55,21 +55,21 @@
 
 | example | ok | status | questions | decider calls |
 |---|---|---|---|---|
-| chickens_cows | ❌ | solved, wrong answer 0 (expected 7) | 12 | 4 |
-| tickets | ❌ | solved, wrong answer 0 (expected 70) | 12 | 4 |
-| ages | ❌ | solved, wrong answer 0 (expected 40) | 27 | 7 |
-| coins | ❌ | solved, wrong answer 0 (expected 18) | 12 | 4 |
-| sum_diff | ❌ | solved, wrong answer 0 (expected 35) | 12 | 4 |
-| rectangle | ❌ | invalid | 36 | 6 |
-| pens | ❌ | invalid | 22 | 5 |
-| marbles | ❌ | solved, wrong answer 0 (expected 30) | 12 | 4 |
-| bakery | ❌ | solved, wrong answer 0 (expected 180) | 12 | 4 |
-| feed_mix | ❌ | invalid | 22 | 5 |
-| plumber | ❌ | solved, wrong answer 0 (expected 4) | 12 | 4 |
-| apples | ❌ | invalid | 36 | 6 |
-| savings | ❌ | solved, wrong answer 0 (expected 24) | 12 | 4 |
-| van | ❌ | solved, wrong answer 0 (expected 24) | 13 | 4 |
-| discount | ❌ | solved, wrong answer 0 (expected 100) | 12 | 4 |
+| chickens_cows | ❌ | solved, wrong answer 0 (expected 7) | 12 | 5 |
+| tickets | ❌ | solved, wrong answer 0 (expected 70) | 12 | 5 |
+| ages | ❌ | solved, wrong answer 0 (expected 40) | 27 | 11 |
+| coins | ❌ | solved, wrong answer 0 (expected 18) | 12 | 5 |
+| sum_diff | ❌ | solved, wrong answer 0 (expected 35) | 12 | 5 |
+| rectangle | ❌ | invalid | 36 | 9 |
+| pens | ❌ | invalid | 22 | 7 |
+| marbles | ❌ | solved, wrong answer 0 (expected 30) | 12 | 5 |
+| bakery | ❌ | solved, wrong answer 0 (expected 180) | 12 | 5 |
+| feed_mix | ❌ | invalid | 22 | 7 |
+| plumber | ❌ | solved, wrong answer 0 (expected 4) | 12 | 5 |
+| apples | ❌ | invalid | 36 | 9 |
+| savings | ❌ | solved, wrong answer 0 (expected 24) | 12 | 5 |
+| van | ❌ | solved, wrong answer 0 (expected 24) | 13 | 5 |
+| discount | ❌ | solved, wrong answer 0 (expected 100) | 12 | 5 |
 
 Teacher-forced decision accuracy: **155/297 = 52.2%**
 

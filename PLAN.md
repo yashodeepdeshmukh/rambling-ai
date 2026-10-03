@@ -22,6 +22,32 @@ See `reports/baseline.md` for the per-example and per-decision tables.
 "The solver returned ok" or "the flow deployed" is not evidence of correctness, and the cascade
 below must not treat it as such.
 
+## PoC status (stand-in decider + cascade)
+
+Built and measured without Laya (see `README.md` and `reports/poc.md`):
+- Synthetic data generator: 12 solver families and 10 flow templates × 4 phrasings, split by
+  phrasing so tests measure generalization to unseen wording.
+- Trained CPU stand-in decider with the Laya interface, per-kind temperatures, and
+  **cross-phrasing calibration**: three fold models, each scored on the phrasing it never saw;
+  a gate must reach 98% precision in every fold.
+- Cascade with per-decision gates, partial and full LLM fallback, hard checks, token ledger.
+
+Lessons that change the plan:
+1. **Calibrate across phrasings, not on one held-out phrasing.** With a single calibration
+   phrasing, the Node-RED gates looked safe (field choice 97.5% accurate) but auto-accepted flows
+   were only 88% correct on the test phrasing, because a new wording ("the flow *reported on*
+   topic …") fooled the field choice with high confidence. Cross-phrasing calibration measured that
+   decision at 49% on unseen wording, so it is never trusted, and auto-accepted precision is 100%.
+   Expect the same jaggedness from Laya; keep this calibration scheme.
+2. **Order decisions so later ones can anchor on earlier ones.** Asking for a constraint's
+   right-hand side first and feeding it back as an anchor raised coefficient accuracy; batching
+   everything at once left the model nothing to localize on.
+3. **Coefficient choice is the bottleneck for solvers** (~50% on unseen phrasing for the stand-in).
+   This is what a pretrained encoder has to fix before solver items can run with zero LLM tokens.
+4. **Paraphrase diversity matters more than volume.** The stand-in fits training data almost
+   perfectly; errors come from wording it never saw. Phase 1 should spend effort on paraphrases
+   (LLM-generated, verified) rather than more samples of the same phrasing.
+
 ## Phase 1: scale up labelled data (no GPU needed)
 
 The labels are the decisions; `scripts/export_training.py` already turns any gold formalization

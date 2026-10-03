@@ -131,13 +131,19 @@ def term_questions(prefix: str, label: str, model: LinearModel, mags) -> dict:
     return qs
 
 
-def constraint_questions(text: str, model: LinearModel, j: int) -> dict:
+def anchor_questions(text: str, j: int) -> dict:
+    """First round of a constraint: the parts that anchor it to a place in the text."""
     label = f"Constraint #{j}"
-    qs = term_questions(f"c{j}", label, model, magnitude_options(text))
-    qs[f"c{j}.const"] = Choice(f"{label}: constant added to the left side", const_options(text))
-    qs[f"c{j}.rel"] = Choice(f"{label}: relation between the left and right side", RELS)
-    qs[f"c{j}.rhs"] = Choice(f"{label}: right-hand side value", rhs_options(text))
-    return qs
+    return {
+        f"c{j}.const": Choice(f"{label}: constant added to the left side", const_options(text)),
+        f"c{j}.rel": Choice(f"{label}: relation between the left and right side", RELS),
+        f"c{j}.rhs": Choice(f"{label}: right-hand side value", rhs_options(text)),
+    }
+
+
+def constraint_questions(text: str, model: LinearModel, j: int) -> dict:
+    return {**anchor_questions(text, j),
+            **term_questions(f"c{j}", f"Constraint #{j}", model, magnitude_options(text))}
 
 
 def _coeffs(ans: dict, prefix: str, n: int) -> list[Fraction]:
@@ -159,13 +165,17 @@ def build(text: str, decider) -> LinearModel:
                         domain=h["domain"].value, nonneg=h["nonneg"].value, goal=goal)
 
     for j in range(1, n_cons + 1):
+        # Two rounds: pick the right-hand side (and constant) first, then the coefficients,
+        # so the coefficient questions can be anchored to where that number sits in the text.
         state = f"{text}\n\n{model.render()}\nNow write constraint #{j}; constraints follow the order of the text."
-        a = decider.decide(TASK, state, constraint_questions(text, model, j))
+        a = decider.decide(TASK, state, anchor_questions(text, j))
+        const, rel, rhs = (a[f"c{j}.const"].value, a[f"c{j}.rel"].value, a[f"c{j}.rhs"].value)
+        anchor = " ".join(x for x in (rhs, const.lstrip("+-")) if x != "0")
+        state = (f"{state}\nAnchor: {anchor}\n"
+                 f"Constraint #{j} so far: ...{'' if const == '0' else ' ' + const} {rel} {rhs}")
+        b = decider.decide(TASK, state, term_questions(f"c{j}", f"Constraint #{j}", model, magnitude_options(text)))
         model.constraints.append(Constraint(
-            coeffs=_coeffs(a, f"c{j}", n_vars),
-            const=Fraction(a[f"c{j}.const"].value),
-            rel=a[f"c{j}.rel"].value,
-            rhs=Fraction(a[f"c{j}.rhs"].value)))
+            coeffs=_coeffs(b, f"c{j}", n_vars), const=Fraction(const), rel=rel, rhs=Fraction(rhs)))
 
     state = f"{text}\n\n{model.render()}\nNow state what to solve for."
     if goal == "value":

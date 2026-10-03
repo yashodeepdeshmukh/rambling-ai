@@ -3,3 +3,5 @@ __pycache__/
 .pytest_cache/
 nodered/node_modules/
 nodered/package-lock.json
+models/
+reports/demo_flow.json
